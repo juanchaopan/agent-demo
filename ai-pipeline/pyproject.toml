@@ -1,0 +1,25 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "juanchaopan",email = "p8499@126.com"}
+]
+requires-python = ">=3.14"
+dependencies = [
+    "celery (>=5.6.3,<6.0.0)",
+    "redis (>=8.1.0,<9.0.0)",
+    "pymongo (>=4.18.1,<5.0.0)",
+    "pydantic (>=2.13.5,<3.0.0)",
+    "validators (>=0.35.0,<0.36.0)",
+    "langchain-core (>=1.6.3,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
+    "langgraph (>=1.2.11,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
+    "langchain-openai (>=1.6.2,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
+    "jsonpath-ng (>=1.8.0,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
+    "httpx (>=0.28.1,<0.29.0) ; python_version >= \"3.14\" and python_version < \"4.0\""
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
