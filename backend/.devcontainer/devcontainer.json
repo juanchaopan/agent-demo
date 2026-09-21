@@ -1,0 +1,24 @@
+{
+  "name": "backend",
+  "dockerComposeFile": "${localWorkspaceFolder}/../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/app",
+  "features": {},
+  "forwardPorts": [],
+  "postCreateCommand": "",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "njpwerner.autodocstring",
+        "ms-python.black-formatter",
+        "tamasfe.even-better-toml",
+        "shakram02.bash-beautify",
+        "anthropic.claude-code"
+      ]
+    }
+  },
+  "runServices": [
+    "backend"
+  ]
+}

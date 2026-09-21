@@ -30,6 +30,35 @@ services:
     # depends_on:
     # ports:
 
+  backend:
+    container_name: backend
+    # image:
+    build: ./backend/.devcontainer
+    volumes:
+      - ./backend:/app
+    user: vscode
+    working_dir: /app
+    command: sleep infinity
+    networks:
+      - network
+    environment:
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - MONGO_DB=agent_mongo_db
+      - MONGO_DB_USERNAME=agent_mongo_user
+      - MONGO_DB_PASSWORD=mongo_dev_password_123
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PASSWORD=redis_dev_password_123
+    # depends_on:
+    ports:
+      - "8000:8000"
+
   rabbitmq:
     image: rabbitmq:4.3.6-management
     container_name: rabbitmq
