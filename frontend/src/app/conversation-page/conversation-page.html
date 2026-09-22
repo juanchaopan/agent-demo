@@ -1,0 +1,78 @@
+<div class="mx-auto flex h-dvh max-w-6xl flex-col gap-4 p-4 md:flex-row md:p-6">
+  <section class="flex min-h-0 flex-1 flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
+    <header class="border-b border-slate-200 px-4 py-3">
+      <h1 class="text-lg font-semibold text-slate-900">Conversation</h1>
+    </header>
+
+    <div class="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      @if (initializing()) {
+        <p class="text-sm text-slate-500">Loading conversation…</p>
+      }
+
+      @for (message of messages(); track message.id) {
+        <div class="flex" [class.justify-end]="message.role === 'user'">
+          <div
+            class="max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap"
+            [class.bg-blue-600]="message.role === 'user'"
+            [class.text-white]="message.role === 'user'"
+            [class.bg-slate-100]="message.role === 'assistant'"
+            [class.text-slate-900]="message.role === 'assistant'"
+          >
+            {{ message.content }}
+            @if (message.status === 'pending') {
+              <span class="ml-1 inline-block animate-pulse text-current opacity-60">▍</span>
+            }
+            @if (message.status === 'failed') {
+              <div class="mt-1 text-xs font-medium text-red-600">
+                Something went wrong generating this message.
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div #scrollAnchor></div>
+    </div>
+
+    @if (loadError()) {
+      <p class="border-t border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        {{ loadError() }}
+      </p>
+    }
+
+    <form class="flex gap-2 border-t border-slate-200 p-3" (submit)="$event.preventDefault(); send()">
+      <textarea
+        #draftInput
+        rows="1"
+        placeholder="Type a message…"
+        class="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        [disabled]="sending() || initializing()"
+        (keydown)="onKeydown($event)"
+      ></textarea>
+      <button
+        type="submit"
+        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        [disabled]="sending() || initializing()"
+      >
+        Send
+      </button>
+    </form>
+  </section>
+
+  <section class="flex min-h-0 flex-1 flex-col rounded-xl border border-slate-200 bg-white shadow-sm md:max-w-sm">
+    <header class="border-b border-slate-200 px-4 py-3">
+      <h2 class="text-lg font-semibold text-slate-900">Event</h2>
+      <p class="text-xs text-slate-500">Read-only snapshot of the current event object.</p>
+    </header>
+
+    <div class="flex-1 overflow-auto p-4">
+      @if (eventError()) {
+        <p class="text-sm text-red-600">{{ eventError() }}</p>
+      } @else if (eventData() === null) {
+        <p class="text-sm text-slate-500">No event data yet.</p>
+      } @else {
+        <pre class="overflow-x-auto text-xs text-slate-800">{{ eventData() | json }}</pre>
+      }
+    </div>
+  </section>
+</div>

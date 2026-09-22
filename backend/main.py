@@ -66,6 +66,14 @@ async def post_message(
     return {"message_id": user.id}
 
 
+@app.get("/conversations/{conversation_id}/event")
+async def get_event(conversation_id: str):
+    conversation = await run_in_threadpool(store.get, conversation_id)
+    if conversation is None:
+        raise HTTPException(404, "Conversation not found")
+    return conversation.event
+
+
 @app.get("/conversations/{conversation_id}/messages")
 async def get_messages(conversation_id: str, start_message_id: str | None = Query(None)):
     """Server-sent events: finished messages whole, pending ones token by token.

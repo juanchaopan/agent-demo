@@ -59,6 +59,25 @@ services:
     ports:
       - "8000:8000"
 
+  frontend:
+    container_name: frontend
+    image: mcr.microsoft.com/devcontainers/typescript-node:5.2.1-24-bookworm
+    # build:
+    volumes:
+      - ./frontend:/app
+    user: node
+    working_dir: /app
+    command: sleep infinity
+    networks:
+      - network
+    environment:
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
+      - VITE_BACKEND_URL=
+    # depends_on:
+    ports:
+      - "3000:3000"
+
   rabbitmq:
     image: rabbitmq:4.3.6-management
     container_name: rabbitmq
@@ -87,7 +106,7 @@ services:
       - network
 
   redis:
-    image: redis:8.10.1
+    image: redis:8.10.2
     container_name: redis
     restart: unless-stopped
     command: ["redis-server", "--requirepass", "redis_dev_password_123"]
@@ -95,6 +114,17 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    networks:
+      - network
+
+  nginx:
+    container_name: nginx
+    image: nginx:1.31.6-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - network
 

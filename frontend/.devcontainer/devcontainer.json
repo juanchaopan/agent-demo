@@ -1,0 +1,21 @@
+{
+	"name": "frontend",
+	"dockerComposeFile": "${localWorkspaceFolder}/../docker-compose.yml",
+	"service": "frontend",
+	"workspaceFolder": "/app",
+	"features": {},
+	"forwardPorts": [],
+	"postCreateCommand": "",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"bradlc.vscode-tailwindcss",
+				"anthropic.claude-code"
+			]
+		}
+	},
+	"runServices": [
+		"frontend"
+	]
+}
