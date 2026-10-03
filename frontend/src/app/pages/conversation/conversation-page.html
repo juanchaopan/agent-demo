@@ -1,0 +1,17 @@
+<main class="flex min-h-0 min-w-0 flex-1 flex-col">
+  <div class="min-h-0 flex-1" [messages]="messages()" (retry)="onRetry($event)"></div>
+
+  <footer class="flex flex-col gap-2 px-4 pb-4">
+    <div
+      class="mx-auto max-w-3xl"
+      [(composer)]="composer"
+      (submit)="onSubmit($event)"
+    ></div>
+  </footer>
+</main>
+
+<aside
+  class="max-h-72 shrink-0 overflow-y-auto border-t border-slate-200 bg-white md:max-h-none md:w-96 md:border-t-0 md:border-l"
+>
+  <div [event]="event()"></div>
+</aside>

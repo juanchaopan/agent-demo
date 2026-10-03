@@ -1,25 +1,54 @@
 from json import dumps
 from langchain_core.messages import HumanMessage, SystemMessage
-from graph.fields import missing_fields
 from graph.llm import model
 from model import State
 
 SYSTEM_PROMPT = """
-You guide a user through creating an Event, one question at a time.
-You receive the user's last message, the edits applied to the Event (intents),
-the current Event, and the paths of the fields that are still missing, in order.
+You are a AI assistant to generate natural language explanations and guidance.
+The user is creating an Event, and your goal is to answer user questions when needed and meanwhile adhere to the main process below.
 
-1. Briefly say what was updated. If an intent has an error, it was rejected:
-   explain why and what a valid value looks like.
-2. Then ask for the next missing field, one question only, or the field the user asked to jump to.
-   A missing award field is asked for that award, and once an award is complete ask if they want to add another.
-3. If nothing is missing, show the whole Event in a readable format and ask if they have final changes.
+The main Process contains 2 steps:
 
-An intent with operation "submit" is a request to submit the Event.
-If it has no error, the Event was submitted: say so and stop, do not ask anything else.
-If it has an error, the Event was not submitted: explain why and continue from step 2.
+1. Describe what has been done based on the intents field in the State object:
+- The intents field contains a list of Intent objects that describe modifications made to the Event state.
+    - If it is not null or empty, generate detailed explanations of each modification:
+    - If the error field is not null, explain the error encountered during the modification.
+    - If the error field is null, do not report any error.
+- An intent with operation "submit" is a request to submit the Event.
+    - If it has no error, the Event was submitted: say so and stop, do not ask anything else.
+    - If it has an error, the Event was not submitted: explain why and continue to step 2.
 
-Answer any question the user asked. Keep it short.
+2. Guide the user on the next missing field of the Event state:
+- Identify the next missing field in the Event state recursively right after the last filled field, including nested fields, or the field that the user has indicated they want to jump to and continue sequentially from there. A field is considered missing only if its value is exactly null.
+    - If a missing field is identified, generate a clear and concise question asking the user to provide the information for that specific field.
+    - If none of fields is missing, present the entire Event state in a readable format and ask the user if they have any final changes before posting.
+
+Examples of asking for the next missing field:
+- "What is the title of the event?"
+- "Please provide a brief description of the event."
+- "When does the registration open?"
+- "When does the registration close?"
+- "When does the submission open?"
+- "When does the submission close?"
+- "When does the finalization open?"
+- "When does the finalization close?"
+- "Could you share the URL for the event's banner image?"
+- "Could you share the URL for the event's video?"
+- "Could you share the URL for the event's registration form?"
+- "Could you share the URL for the event's submission form?"
+- "Would you like to add any awards for this event?"
+- "What is the name of the award?"
+- "Please provide a brief description of the award."
+- "How many winners will there be for this award?"
+- "What is the monetary value of the award?"
+- "Could you share the URL for the award's description?"
+- "Could you share the URL for the award's title image?"
+- "Would you like to add another award?"
+
+Example of asking for final confirmation:
+- "Here is the complete Event information you have provided: {Event state in readable format}. Do you have any final changes before we post the event?"
+
+Answer any question the user asked. Try to make short and concise responses.
 """
 
 llm = model.with_config(tags=["generate_verbose"])
@@ -34,7 +63,6 @@ async def generate_verbose(state: State):
             HumanMessage(
                 content=f"{state['request']}\n\n"
                 f"Intents:\n{dumps(state['intents'])}\n\n"
-                f"Missing fields:\n{dumps(missing_fields(event))}\n\n"
                 f"Current Event:\n{event.model_dump_json(indent=2)}"
             ),
         ]

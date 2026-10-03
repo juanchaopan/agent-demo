@@ -76,7 +76,8 @@ services:
       - VITE_BACKEND_URL=
     # depends_on:
     ports:
-      - "3000:3000"
+      - "4200:4200"
+      - "9222:9222"
 
   rabbitmq:
     image: rabbitmq:4.3.6-management

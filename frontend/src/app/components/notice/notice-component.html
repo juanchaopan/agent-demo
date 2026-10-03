@@ -1,0 +1,5 @@
+@if (notice().status === 'failed') {
+  <p class="text-red-700">{{ notice().text }}</p>
+} @else {
+  <p class="text-slate-500">{{ notice().text }}</p>
+}

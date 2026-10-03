@@ -1,0 +1,26 @@
+<div class="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-6">
+  @switch (messages().status) {
+    @case ('loading') {
+      <p class="py-16 text-center text-sm text-slate-400">Loading conversation…</p>
+    }
+    @case ('failed') {
+      <div class="flex flex-col items-center gap-3 py-16 text-sm">
+        <p class="text-red-600">{{ messages().error }}</p>
+        <button
+          type="button"
+          class="rounded-xl bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700"
+          (click)="retry.emit(null)"
+        >
+          Retry
+        </button>
+      </div>
+    }
+    @default {
+      @for (message of messages().items; track message.id) {
+        <div [message]="message" (retry)="retry.emit(message.id)"></div>
+      } @empty {
+        <p class="py-16 text-center text-sm text-slate-400">Send a message to start.</p>
+      }
+    }
+  }
+</div>

@@ -3,6 +3,7 @@
 	"dockerComposeFile": "${localWorkspaceFolder}/../docker-compose.yml",
 	"service": "frontend",
 	"workspaceFolder": "/app",
+	"updateRemoteUserUID": false,
 	"features": {},
 	"forwardPorts": [],
 	"postCreateCommand": "",

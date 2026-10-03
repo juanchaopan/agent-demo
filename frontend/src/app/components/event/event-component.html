@@ -1,0 +1,20 @@
+<h2 class="font-semibold text-slate-900">Event</h2>
+@if (event().status === 'loading') {
+  <span class="flex h-5 items-center gap-1 text-slate-400" aria-label="Loading">
+    <span class="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]"></span>
+    <span class="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]"></span>
+    <span class="size-1.5 animate-bounce rounded-full bg-current"></span>
+  </span>
+}
+@if (event().status === 'failed') {
+  <p class="text-xs text-red-600">{{ event().error }}</p>
+}
+@if (event().status === 'loaded') {
+  @if (event().data === null) {
+    <p class="text-slate-400">No event yet.</p>
+  } @else {
+    <pre
+      class="overflow-x-auto rounded-2xl border border-slate-200 bg-white px-4 py-2.5 font-mono text-xs leading-relaxed text-slate-800 shadow-sm"
+    >{{ event().data | json }}</pre>
+  }
+}

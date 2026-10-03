@@ -17,18 +17,18 @@ DATE_ORDER = [
 class Event(BaseModel):
     title: str | None = Field(default=None, min_length=4)
     description: str | None = Field(default=None, min_length=10)
-    openRegistrationDate: datetime | None = None
-    closeRegistrationDate: datetime | None = None
-    openSubmissionDate: datetime | None = None
-    closeSubmissionDate: datetime | None = None
-    openFinalizeDate: datetime | None = None
-    closeFinalizeDate: datetime | None = None
+    openRegistrationDate: datetime | Literal[""] | None = None
+    closeRegistrationDate: datetime | Literal[""] | None = None
+    openSubmissionDate: datetime | Literal[""] | None = None
+    closeSubmissionDate: datetime | Literal[""] | None = None
+    openFinalizeDate: datetime | Literal[""] | None = None
+    closeFinalizeDate: datetime | Literal[""] | None = None
     bannerImageUrl: str | None = None
     videoUrl: str | None = None
     registrationFormUrl: str | None = None
     submissionFormUrl: str | None = None
     awards: list[Award] | None = None
-    editStatus: Literal["draft", "published", "archived"] | None = None
+    editStatus: Literal["draft", "published", "archived", ""] | None = None
 
     @field_validator(
         "bannerImageUrl", "videoUrl", "registrationFormUrl", "submissionFormUrl"
@@ -44,6 +44,9 @@ class Event(BaseModel):
     def check_dates(self):
         for earlier, later, allow_equal in DATE_ORDER:
             a, b = getattr(self, earlier), getattr(self, later)
-            if a is not None and b is not None and (a > b or (a == b and not allow_equal)):
+            # "" means the field is intentionally left blank, treat it like unset
+            if a in (None, "") or b in (None, ""):
+                continue
+            if a > b or (a == b and not allow_equal):
                 raise ValueError(f"{later} must be after {earlier}")
         return self

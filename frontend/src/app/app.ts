@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { ConversationPage } from './conversation-page/conversation-page';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [ConversationPage],
+  imports: [RouterOutlet],
   selector: 'app-root',
   templateUrl: './app.html',
 })
