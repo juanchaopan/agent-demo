@@ -17,7 +17,11 @@
     }
     @default {
       @for (message of messages().items; track message.id) {
-        <div [message]="message" (retry)="retry.emit(message.id)"></div>
+        @if (message.role === 'user') {
+          <div [userMessage]="message" (retry)="retry.emit(message.id)"></div>
+        } @else {
+          <div [assistantMessage]="message" (toggleActivity)="toggleActivity.emit(message.id)"></div>
+        }
       } @empty {
         <p class="py-16 text-center text-sm text-slate-400">Send a message to start.</p>
       }

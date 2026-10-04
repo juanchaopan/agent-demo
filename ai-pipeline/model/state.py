@@ -9,4 +9,5 @@ class State(TypedDict):
     event: Event
     request: str | None
     intents: list[Intent] | None
+    activity: list[dict] | None
     response: str | None

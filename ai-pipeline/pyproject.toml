@@ -16,7 +16,6 @@ dependencies = [
     "langgraph (>=1.2.11,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
     "langchain-openai (>=1.6.2,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
     "jsonpath-ng (>=1.8.0,<2.0.0) ; python_version >= \"3.14\" and python_version < \"4.0\"",
-    "httpx (>=0.28.1,<0.29.0) ; python_version >= \"3.14\" and python_version < \"4.0\""
 ]
 
 

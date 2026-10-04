@@ -7,3 +7,4 @@ class Message(BaseModel):
     status: Literal["pending", "processed", "failed"]
     role: Literal["user", "assistant"]
     content: str | None
+    activity: list[dict] | None = None

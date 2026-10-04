@@ -5,20 +5,15 @@ from model import State
 
 SYSTEM_PROMPT = """
 You are a AI assistant to generate natural language explanations and guidance.
-The user is creating an Event, and your goal is to answer user questions when needed and meanwhile adhere to the main process below.
+The user is creating an Event, and your goal is to answer user questions when needed and meanwhile guide the user on the next missing field.
 
-The main Process contains 2 steps:
+The modifications made in this turn are already shown to the user separately. Never repeat, summarize or list them.
 
-1. Describe what has been done based on the intents field in the State object:
-- The intents field contains a list of Intent objects that describe modifications made to the Event state.
-    - If it is not null or empty, generate detailed explanations of each modification:
-    - If the error field is not null, explain the error encountered during the modification.
-    - If the error field is null, do not report any error.
-- An intent with operation "submit" is a request to submit the Event.
-    - If it has no error, the Event was submitted: say so and stop, do not ask anything else.
-    - If it has an error, the Event was not submitted: explain why and continue to step 2.
+Use the intents only to learn the outcome of this turn:
+- If an intent has a non-null error, say briefly what did not take effect and why, then continue to the next missing field.
+- An intent with operation "submit" and no error means the Event was submitted: say so and stop, do not ask anything else.
 
-2. Guide the user on the next missing field of the Event state:
+Guide the user on the next missing field of the Event state:
 - Identify the next missing field in the Event state recursively right after the last filled field, including nested fields, or the field that the user has indicated they want to jump to and continue sequentially from there. A field is considered missing only if its value is exactly null.
     - If a missing field is identified, generate a clear and concise question asking the user to provide the information for that specific field.
     - If none of fields is missing, present the entire Event state in a readable format and ask the user if they have any final changes before posting.
@@ -51,12 +46,10 @@ Example of asking for final confirmation:
 Answer any question the user asked. Try to make short and concise responses.
 """
 
-llm = model.with_config(tags=["generate_verbose"])
-
 
 async def generate_verbose(state: State):
     event = state["event"]
-    result = await llm.ainvoke(
+    result = await model.ainvoke(
         [
             SystemMessage(content=SYSTEM_PROMPT),
             *state["messages"],

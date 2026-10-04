@@ -1,0 +1,20 @@
+@if (userMessage().content) {
+  <span class="whitespace-pre-wrap">{{ userMessage().content }}</span>
+}
+@if (userMessage().status === 'streaming') {
+  @if (userMessage().content) {
+    <span class="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-current align-text-bottom opacity-50"></span>
+  } @else {
+    <span class="flex h-5 items-center gap-1" aria-label="Generating">
+      <span class="size-1.5 animate-bounce rounded-full bg-current opacity-50 [animation-delay:-0.3s]"></span>
+      <span class="size-1.5 animate-bounce rounded-full bg-current opacity-50 [animation-delay:-0.15s]"></span>
+      <span class="size-1.5 animate-bounce rounded-full bg-current opacity-50"></span>
+    </span>
+  }
+}
+@if (userMessage().status === 'failed') {
+  <p class="mt-1 flex items-center gap-2 text-xs text-red-300">
+    Couldn't load the reply.
+    <button type="button" class="font-medium underline hover:opacity-70" (click)="retry.emit()">Retry</button>
+  </p>
+}

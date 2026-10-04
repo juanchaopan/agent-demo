@@ -1,10 +1,11 @@
 import { Component, ElementRef, effect, inject, input, output } from '@angular/core';
-import { MessageComponent } from '../message/message-component';
+import { AssistantMessageComponent } from '../assistant-message/assistant-message-component';
+import { UserMessageComponent } from '../user-message/user-message-component';
 import { MessagesVM } from './messages-vm';
 
 @Component({
   selector: 'div[messages]',
-  imports: [MessageComponent],
+  imports: [UserMessageComponent, AssistantMessageComponent],
   templateUrl: './messages-component.html',
   host: {
     class: 'block h-full w-full overflow-y-auto',
@@ -13,6 +14,7 @@ import { MessagesVM } from './messages-vm';
 export class MessagesComponent {
   readonly messages = input.required<MessagesVM>();
   readonly retry = output<string | null>();
+  readonly toggleActivity = output<string>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 

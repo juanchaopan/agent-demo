@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from json import dumps
 from os import getenv
 from redis.asyncio import Redis
 
@@ -11,6 +12,9 @@ class TokenStream:
     def __init__(self, redis: Redis, message_id: str):
         self.redis = redis
         self.key = message_id
+
+    async def activity(self, items: list[dict]):
+        await self.redis.xadd(self.key, {"type": "activity", "data": dumps(items)})
 
     async def chunk(self, text: str):
         await self.redis.xadd(self.key, {"type": "chunk", "data": text})

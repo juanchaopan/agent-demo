@@ -40,16 +40,23 @@ async def answer(conversation_id: str, message_id: str, state: dict):
         try:
             final = None
             async for mode, data in graph.astream(
-                state, stream_mode=["messages", "values"]
+                state, stream_mode=["messages", "updates", "values"]
             ):
-                if mode == "values":
+                if mode == "messages":
+                    chunk, metadata = data
+                    if metadata["langgraph_node"] == "generate_verbose" and chunk.text:
+                        await stream.chunk(chunk.text)
+                elif mode == "updates":
+                    if "build_activity" in data:
+                        await stream.activity(data["build_activity"]["activity"])
+                elif mode == "values":
                     final = data
-                    continue
-                chunk, metadata = data
-                if "generate_verbose" in metadata.get("tags", []) and chunk.text:
-                    await stream.chunk(chunk.text)
             store.complete_message(
-                conversation_id, message_id, final["response"], final["event"]
+                conversation_id,
+                message_id,
+                final["response"],
+                final["event"],
+                final["activity"],
             )
         except Exception:
             store.fail_message(conversation_id, message_id)
@@ -86,6 +93,7 @@ def process_message(conversation_id: str, message_id: str):
         "event": conversation.event,
         "request": request.content,
         "intents": None,
+        "activity": None,
         "response": None,
     }
     run(answer(conversation_id, message_id, state))

@@ -1,5 +1,6 @@
 from jsonpath_ng import parse
 from pydantic import ValidationError
+from graph.fields import missing_fields
 from model import Event, Intent, State
 
 
@@ -20,6 +21,15 @@ def apply(data: dict, intent: Intent):
             path.update(data, items)
 
 
+def submit(event: Event, intents: list[Intent]) -> str | None:
+    # Demo only: no downstream system exists, so passing the checks counts as submitted.
+    if any(i.get("error") for i in intents if i["operation"] != "submit"):
+        return "Not submitted: some edits in this message were rejected."
+    if missing := missing_fields(event):
+        return f"Not submitted: these fields are still missing: {missing}"
+    return None
+
+
 def execute_intents(state: State):
     event = state["event"]
     intents = state["intents"] or []
@@ -36,4 +46,7 @@ def execute_intents(state: State):
             )
         except Exception as e:  # pylint: disable=broad-except
             intent["error"] = str(e)
+    for intent in intents:
+        if intent["operation"] == "submit" and not intent.get("error"):
+            intent["error"] = submit(event, intents)
     return {"event": event, "intents": intents}

@@ -27,7 +27,9 @@ class ConversationStore:
         doc = self.conversations.find_one({"_id": conversation_id})
         return Conversation.model_validate(doc) if doc else None
 
-    def complete_message(self, conversation_id: str, message_id: str, content: str, event):
+    def complete_message(
+        self, conversation_id: str, message_id: str, content: str, event, activity
+    ):
         """Fill in the assistant message and save the updated event in one write."""
         result = self.conversations.update_one(
             {"_id": conversation_id},
@@ -35,6 +37,7 @@ class ConversationStore:
                 "$set": {
                     "messages.$[m].status": "processed",
                     "messages.$[m].content": content,
+                    "messages.$[m].activity": activity,
                     "event": event.model_dump(),
                 }
             },

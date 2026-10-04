@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ActivityItem } from '../components/activity/activity-vm';
 import { readSse } from '../utils/sse-utils';
 
 export type MessageRole = 'user' | 'assistant';
@@ -9,6 +10,12 @@ export interface MessageChunk {
   content: string;
 }
 
+export interface ActivityChunk {
+  message_id: string;
+  role: MessageRole;
+  items: ActivityItem[];
+}
+
 export interface ErrorChunk {
   message_id: string;
   role: MessageRole;
@@ -16,6 +23,7 @@ export interface ErrorChunk {
 
 export interface MessageStreamHandlers {
   onMessageChunk: (chunk: MessageChunk) => void;
+  onActivityChunk: (chunk: ActivityChunk) => void;
   onErrorChunk: (chunk: ErrorChunk) => void;
 }
 
@@ -56,12 +64,13 @@ export class AgentService {
 
   /**
    * Reads the message feed from `fromMessageId` (the full history when null) until the server
-   * ends the response. `message` frames go to `onMessageChunk`, `error` frames to `onErrorChunk`.
+   * ends the response. `message` frames go to `onMessageChunk`, `activity` frames to
+   * `onActivityChunk`, `error` frames to `onErrorChunk`.
    */
   async streamMessages(
     conversationId: string,
     fromMessageId: string | null,
-    { onMessageChunk, onErrorChunk }: MessageStreamHandlers,
+    { onMessageChunk, onActivityChunk, onErrorChunk }: MessageStreamHandlers,
     signal?: AbortSignal,
   ): Promise<void> {
     const query = fromMessageId ? `?start_message_id=${encodeURIComponent(fromMessageId)}` : '';
@@ -72,7 +81,8 @@ export class AgentService {
     );
 
     for await (const { event, data } of readSse(res)) {
-      if (event === 'error') onErrorChunk(JSON.parse(data) as ErrorChunk);
+      if (event === 'activity') onActivityChunk(JSON.parse(data) as ActivityChunk);
+      else if (event === 'error') onErrorChunk(JSON.parse(data) as ErrorChunk);
       else onMessageChunk(JSON.parse(data) as MessageChunk);
     }
   }

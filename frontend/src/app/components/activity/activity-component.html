@@ -1,0 +1,57 @@
+@if (visible()) {
+  <div class="rounded-lg border border-slate-200 bg-slate-50 text-xs leading-normal text-slate-500">
+    <button
+      type="button"
+      class="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left hover:text-slate-700"
+      [attr.aria-expanded]="activity().expanded"
+      (click)="toggle.emit()"
+    >
+      <svg
+        class="size-3 shrink-0 transition-transform"
+        [class.rotate-90]="activity().expanded"
+        viewBox="0 0 12 12"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4.5 2.5 8 6l-3.5 3.5" />
+      </svg>
+      @for (part of summaryParts(); track $index) {
+        @if (!$first) {
+          <span aria-hidden="true">·</span>
+        }
+        <span [class.text-red-600]="part.rejected">{{ part.text }}</span>
+      }
+    </button>
+    @if (activity().expanded) {
+      <ul class="flex flex-col gap-1.5 border-t border-slate-200 px-2.5 py-2">
+        @for (row of rows(); track $index) {
+          <li [class.text-red-600]="row.rejected">
+            <div class="flex flex-wrap items-baseline gap-x-1.5">
+              <span aria-hidden="true">
+                @if (row.rejected) {
+                  ✕
+                } @else {
+                  ✓
+                }
+              </span>
+              <span class="font-medium">{{ row.label }}</span>
+              @if (row.field) {
+                <span class="font-mono">{{ row.field }}</span>
+              }
+              @if (row.detail) {
+                <span class="min-w-0 wrap-anywhere">{{ row.detail }}</span>
+              }
+            </div>
+            @if (row.error) {
+              <p class="mt-0.5 pl-4 wrap-anywhere">{{ row.error }}</p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

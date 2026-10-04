@@ -3,7 +3,7 @@ from bson import ObjectId
 from fastapi import Body, FastAPI, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
-from database import ConversationStore, TokenStreamError, token_stream
+from database import Activity, Chunk, ConversationStore, TokenStreamError, token_stream
 from messaging import enqueue_message
 from model import Conversation, Event, Message
 
@@ -14,10 +14,18 @@ store = ConversationStore()
 def new_exchange(content: str) -> tuple[Message, Message]:
     """A user message and the pending assistant message that will answer it."""
     user = Message(
-        _id=str(ObjectId()), status="processed", role="user", content=content
+        _id=str(ObjectId()),
+        status="processed",
+        role="user",
+        content=content,
+        activity=None,
     )
     assistant = Message(
-        _id=str(ObjectId()), status="pending", role="assistant", content=None
+        _id=str(ObjectId()),
+        status="pending",
+        role="assistant",
+        content=None,
+        activity=None,
     )
     return user, assistant
 
@@ -76,10 +84,14 @@ async def get_event(conversation_id: str):
 
 @app.get("/conversations/{conversation_id}/messages")
 async def get_messages(conversation_id: str, start_message_id: str | None = Query(None)):
-    """Server-sent events: finished messages whole, pending ones token by token.
+    """Server-sent events, one per finished message part or pending token:
 
-    A message the worker failed on is reported as an `error` event. If a pending
-    message's stream fails or dries up, the response ends after its `error`.
+    - default event, {message_id, role, content}: a finished message's content,
+      or a piece of a pending one's.
+    - `activity` event, {message_id, role, items}: an assistant message's
+      activity items.
+    - `error` event, {message_id, role}: the message failed or could not be
+      read; if it was pending, the response ends here.
     """
     messages = await run_in_threadpool(store.messages, conversation_id, start_message_id)
     if messages is None:
@@ -90,15 +102,21 @@ async def get_messages(conversation_id: str, start_message_id: str | None = Quer
             head = {"message_id": message.id, "role": message.role}
             match message.status:
                 case "processed":
+                    if message.role == "assistant":
+                        yield sse({**head, "items": message.activity}, event="activity")
                     yield sse({**head, "content": message.content})
                 case "failed":
                     yield sse(head, event="error")
                 case "pending":
                     try:
                         async with token_stream(message.id) as tokens:
-                            async for chunk in tokens.read():
-                                yield sse({**head, "content": chunk})
-                    except (TokenStreamError, TimeoutError):
+                            async for frame in tokens.read():
+                                match frame:
+                                    case Chunk(text):
+                                        yield sse({**head, "content": text})
+                                    case Activity(items):
+                                        yield sse({**head, "items": items}, event="activity")
+                    except (TokenStreamError, TimeoutError, ValueError):
                         yield sse(head, event="error")
                         return
 
