@@ -8,6 +8,7 @@ class State(TypedDict):
     messages: list[AnyMessage]
     event: Event
     request: str | None
+    asked: str | None
     intents: list[Intent] | None
     activity: list[dict] | None
     response: str | None

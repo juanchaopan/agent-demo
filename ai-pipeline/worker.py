@@ -39,6 +39,7 @@ async def answer(conversation_id: str, message_id: str, state: dict):
     async with token_stream(message_id) as stream:
         try:
             final = None
+            streamed = False
             async for mode, data in graph.astream(
                 state, stream_mode=["messages", "updates", "values"]
             ):
@@ -46,11 +47,15 @@ async def answer(conversation_id: str, message_id: str, state: dict):
                     chunk, metadata = data
                     if metadata["langgraph_node"] == "generate_verbose" and chunk.text:
                         await stream.chunk(chunk.text)
+                        streamed = True
                 elif mode == "updates":
                     if "build_activity" in data:
                         await stream.activity(data["build_activity"]["activity"])
                 elif mode == "values":
                     final = data
+            if not streamed and final["response"]:
+                # a fixed reply (e.g. after a submit) does not come from the model
+                await stream.chunk(final["response"])
             store.complete_message(
                 conversation_id,
                 message_id,
@@ -92,6 +97,7 @@ def process_message(conversation_id: str, message_id: str):
         ],
         "event": conversation.event,
         "request": request.content,
+        "asked": None,
         "intents": None,
         "activity": None,
         "response": None,

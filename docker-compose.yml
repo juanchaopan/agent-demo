@@ -20,8 +20,8 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=guest
       - RABBITMQ_PASSWORD=guest
-      - LANGUAGE_MODEL=gpt-5-nano
-      - LANGUAGE_MODEL_BASE_URL=https://api.openai.com/v1
+      - LANGUAGE_MODEL=nvidia/nemotron-3-super-120b-a12b
+      - LANGUAGE_MODEL_BASE_URL=https://integrate.api.nvidia.com/v1
       - LANGUAGE_MODEL_API_KEY=${LANGUAGE_MODEL_API_KEY}
       - REDIS_HOST=redis
       - REDIS_PORT=6379

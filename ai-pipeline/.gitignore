@@ -75,3 +75,8 @@ ipython_config.py
 ._*
 Thumbs.db
 desktop.ini
+
+reference-repository
+
+# LLM eval candidate prompts (scratch; the chosen one goes into the source)
+evals/*/

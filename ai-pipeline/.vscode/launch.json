@@ -17,6 +17,33 @@
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+        {
+            "name": "Eval: event_flow",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/evals/event_flow.py",
+            "args": ["${input:evalRepeats}"],
+            "env": {
+                "VARIANT": "${input:evalVariant}"
+            },
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ],
+    "inputs": [
+        {
+            "id": "evalVariant",
+            "type": "promptString",
+            "description": "Prompt variant: base = source prompts, or a folder under evals/event_flow/",
+            "default": "base"
+        },
+        {
+            "id": "evalRepeats",
+            "type": "promptString",
+            "description": "Runs per user phrasing",
+            "default": "3"
         }
     ]
 }
