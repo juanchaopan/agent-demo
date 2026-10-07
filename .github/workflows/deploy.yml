@@ -1,0 +1,64 @@
+name: deploy
+on:
+  push: { branches: [main] }
+  workflow_dispatch:
+
+concurrency: deploy
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, packages: write }
+    strategy:
+      matrix:
+        image: [backend, ai-pipeline, frontend]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.image }}
+          file: deploy/${{ matrix.image }}.Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    permissions: { contents: read, packages: read }
+    env:
+      SERVER: ubuntu@${{ vars.DEPLOY_HOST }}
+      SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519   # tolerate CRLF from Windows
+          chmod 600 ~/.ssh/id_ed25519
+          echo "StrictHostKeyChecking accept-new" > ~/.ssh/config
+
+          ssh "$SERVER" 'cloud-init status --wait > /dev/null || true'  # fresh instance: wait for Docker
+          scp deploy/docker-compose.prod.yml "$SERVER:/opt/agent-demo/compose.yaml"
+          scp deploy/Caddyfile deploy/init-mongo.js "$SERVER:/opt/agent-demo/"
+          ssh "$SERVER" 'umask 077; cat > /opt/agent-demo/.env' <<'EOF'
+          REGISTRY=${{ env.REGISTRY }}
+          TAG=${{ github.sha }}
+          DOMAIN=${{ vars.DOMAIN }}
+          LANGUAGE_MODEL=${{ vars.LANGUAGE_MODEL }}
+          LANGUAGE_MODEL_BASE_URL=${{ vars.LANGUAGE_MODEL_BASE_URL }}
+          LANGUAGE_MODEL_API_KEY=${{ secrets.LANGUAGE_MODEL_API_KEY }}
+          MONGO_ROOT_PASSWORD=${{ secrets.MONGO_ROOT_PASSWORD }}
+          MONGO_DB_PASSWORD=${{ secrets.MONGO_DB_PASSWORD }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+          EOF
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh "$SERVER" 'docker login ghcr.io -u ${{ github.actor }} --password-stdin'
+          ssh "$SERVER" 'cd /opt/agent-demo && docker compose pull && docker compose up -d --remove-orphans && docker image prune -f'

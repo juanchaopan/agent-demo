@@ -1,0 +1,5 @@
+.venv
+.devcontainer
+.vscode
+.claude
+**/__pycache__

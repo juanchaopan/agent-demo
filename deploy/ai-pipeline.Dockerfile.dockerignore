@@ -1,0 +1,6 @@
+.venv
+.devcontainer
+.vscode
+.claude
+evals
+**/__pycache__

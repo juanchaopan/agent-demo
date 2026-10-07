@@ -1,0 +1,73 @@
+name: agent-demo
+
+x-defaults: &defaults
+  restart: unless-stopped
+  logging: { driver: local }
+
+x-env: &env
+  MONGO_HOST: mongo
+  MONGO_DB: agent_mongo_db
+  MONGO_DB_USERNAME: agent_mongo_user
+  MONGO_DB_PASSWORD: ${MONGO_DB_PASSWORD}
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_USER: agent
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+  REDIS_HOST: redis
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+services:
+  caddy:
+    <<: *defaults
+    image: ${REGISTRY}/frontend:${TAG}
+    ports: ["80:80", "443:443"]
+    environment: { DOMAIN: "${DOMAIN}" }
+    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddy-data:/data, caddy-config:/config]
+    mem_limit: 96m
+
+  backend:
+    <<: *defaults
+    image: ${REGISTRY}/backend:${TAG}
+    environment: *env
+    mem_limit: 256m
+
+  worker:
+    <<: *defaults
+    image: ${REGISTRY}/ai-pipeline:${TAG}
+    environment:
+      <<: *env
+      LANGUAGE_MODEL: ${LANGUAGE_MODEL:-gpt-5-nano}
+      LANGUAGE_MODEL_BASE_URL: ${LANGUAGE_MODEL_BASE_URL:-https://api.openai.com/v1}
+      LANGUAGE_MODEL_API_KEY: ${LANGUAGE_MODEL_API_KEY}
+    mem_limit: 448m
+
+  mongo:
+    <<: *defaults
+    image: mongo:7.0 # 8.x refuses to start on Linux 6.19+ (SERVER-121912)
+    command: --wiredTigerCacheSizeGB 0.25
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_DB_PASSWORD: ${MONGO_DB_PASSWORD}
+    volumes: [mongo-data:/data/db, ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro]
+    mem_limit: 512m
+
+  rabbitmq:
+    <<: *defaults
+    image: rabbitmq:4.3.6
+    hostname: rabbitmq # stable node name keeps the data directory
+    environment:
+      RABBITMQ_DEFAULT_USER: agent
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes: [rabbitmq-data:/var/lib/rabbitmq]
+
+  redis:
+    <<: *defaults
+    image: redis:8.10.2
+    command: redis-server --requirepass ${REDIS_PASSWORD} --save "" --maxmemory 64mb --maxmemory-policy volatile-lru
+    mem_limit: 96m
+
+volumes:
+  caddy-data:
+  caddy-config:
+  mongo-data:
+  rabbitmq-data:
