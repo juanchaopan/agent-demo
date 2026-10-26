@@ -46,6 +46,8 @@ jobs:
           echo "StrictHostKeyChecking accept-new" > ~/.ssh/config
 
           ssh "$SERVER" 'cloud-init status --wait > /dev/null || true'  # fresh instance: wait for Docker
+          scp deploy/ensure-wordscene-network.sh "$SERVER:/opt/agent-demo/ensure-wordscene-network.sh"
+          ssh "$SERVER" 'sh /opt/agent-demo/ensure-wordscene-network.sh'
           scp deploy/docker-compose.prod.yml "$SERVER:/opt/agent-demo/compose.yaml"
           scp deploy/Caddyfile deploy/init-mongo.js "$SERVER:/opt/agent-demo/"
           ssh "$SERVER" 'umask 077; cat > /opt/agent-demo/.env' <<'EOF'

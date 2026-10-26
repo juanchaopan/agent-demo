@@ -23,6 +23,10 @@ services:
     environment: { DOMAIN: "${DOMAIN}" }
     volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddy-data:/data, caddy-config:/config]
     mem_limit: 96m
+    networks:
+      default: {}
+      wordscene-edge:
+        ipv4_address: 172.30.80.2
 
   backend:
     <<: *defaults
@@ -71,3 +75,8 @@ volumes:
   caddy-config:
   mongo-data:
   rabbitmq-data:
+
+networks:
+  default: {}
+  wordscene-edge:
+    external: true
