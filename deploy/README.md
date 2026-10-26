@@ -40,7 +40,7 @@ The local dev setup is unchanged.
    ```sh
    gh variable set DEPLOY_HOST --body <public_ip>
    gh variable set DOMAIN --body <name>.duckdns.org
-   gh variable set LANGUAGE_MODEL --body nvidia/nemotron-3-super-120b-a12b
+   gh variable set LANGUAGE_MODEL --body nvidia/nemotron-3.5-super-vl-120b-a12b
    gh variable set LANGUAGE_MODEL_BASE_URL --body https://integrate.api.nvidia.com/v1
    gh secret set DEPLOY_SSH_KEY < ~/.ssh/agent-demo
    gh secret set LANGUAGE_MODEL_API_KEY
@@ -53,6 +53,7 @@ The local dev setup is unchanged.
 ## Operations
 
 - **Logs:** `ssh -i ~/.ssh/agent-demo ubuntu@<ip>`, then `cd /opt/agent-demo && docker compose ps` or `docker compose logs -f worker`.
+- **Redeploy without a push:** `gh workflow run deploy.yml`, for example after changing a variable or secret.
 - **Rollback:** re-run an older deploy run in the Actions tab.
 - **Resize:** `terraform apply -var bundle_id=small_3_0`.
 - **Teardown:** `terraform destroy`.
@@ -65,3 +66,4 @@ Replacing the instance wipes its data. That happens on a resize or any change to
 - **Mongo passwords are set once.** They are applied on the first start only. To change them, run `docker compose down -v` on the server, which wipes the data.
 - **`cloud-init.sh` must be POSIX `sh`.** Lightsail prepends its own `#!/bin/sh` script, so the file runs under dash.
 - **Keep `infra/terraform.tfstate`.** It is git-ignored and only exists locally.
+- **NVIDIA can retire a hosted model while `/models` still lists it.** Chat calls then return 404 `Function '…': Not found for account`. Set `LANGUAGE_MODEL` to a current model and redeploy.
